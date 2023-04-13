@@ -15,11 +15,18 @@ public class Settings : MonoBehaviour
 
     private void Awake()
     {
+        // setting 1 : ÇØ»óµµ
         var resolutions = Screen.resolutions;
         foreach (var resolution in resolutions)
         {
-
+            Debug.Log(string.Format("{0} x {1}", resolution.width, resolution.height));
         }
+        settings[0].name.text = "RESOLUTION";
+        settings[0].ui = gameObject.AddComponent<Dropdown>();
+
+        Screen.SetResolution(1920, 1080, true);
+
+        // 
     }
 
     public void OnClickSave()
