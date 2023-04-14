@@ -2,15 +2,26 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// https://answers.unity.com/questions/1345958/mesh-from-magicavoxel-cast-a-strange-holed-shadow.html
+// magicalvoxel 로 만든 오브젝트는 shadow bias normal 값을 0 으로 조정하면
+// 이음새에 빛이 투과되는 이슈를 막을 수 있다
+
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance = null;
 
     public string version = "";
 
+
+    public bool isInGame = false;
+
     private void Awake()
     {
-        instance = this;
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(instance);
+        }
 
         /*var request = Resources.LoadAsync("Build", typeof(ScriptableObject));*/
         var buildObj = Resources.Load<BuildScriptableObject>("Build");

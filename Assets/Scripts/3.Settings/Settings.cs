@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -6,40 +7,106 @@ using UnityEngine.UI;
 // https://www.youtube.com/watch?v=X3LsvOvMpRU
 public class Settings : MonoBehaviour
 {
-    public struct Setting
-    {
-        public Text name;
-        public Selectable ui;
-    }
-    public Setting[] settings = null;
+    // display ui
+    private Dropdown resolution = null;
+    private Toggle windowMode = null;
+    private Slider[] volumeSliders = null;
 
-    private void Awake()
+    private void Init()
     {
-        // setting 1 : 해상도
-        var resolutions = Screen.resolutions;
-        foreach (var resolution in resolutions)
+        // setting fallback
+        if (PlayerPrefs.HasKey("Resolution") == false)
         {
-            Debug.Log(string.Format("{0} x {1}", resolution.width, resolution.height));
+            PlayerPrefs.SetString("Resolution", "1920 x 1080");
         }
-        settings[0].name.text = "RESOLUTION";
-        settings[0].ui = gameObject.AddComponent<Dropdown>();
 
-        Screen.SetResolution(1920, 1080, true);
+        if (PlayerPrefs.HasKey("WindowMode") == false)
+        {
+            PlayerPrefs.SetInt("WindowMode", 0);
+        }
 
-        // 
+        if (PlayerPrefs.HasKey("MasterVolume") == false)
+        {
+            PlayerPrefs.SetFloat("MasterVolume", 1f);
+        }
+
+        if (PlayerPrefs.HasKey("BackgroundVolume") == false)
+        {
+            PlayerPrefs.SetFloat("BackgroundVolume", 1f);
+        }
+
+        if (PlayerPrefs.HasKey("EffectVolume") == false)
+        {
+            PlayerPrefs.SetFloat("EffectVolume", 1f);
+        }
+
+        // setting 1 : 해상도
+        this.resolution = GetComponentInChildren<Dropdown>();
+
+        var resolutions = new List<string>();
+        foreach (var res in Screen.resolutions)
+        {
+            resolutions.Add(string.Format("{0} x {1}", res.width, res.height));
+        }
+        resolutions.Reverse();
+
+        this.resolution.AddOptions(resolutions);
+        /*this.resolution.value = PlayerPrefs.GetString("Resolution");*/
+
+
+        // setting 2 : 창모드
+        this.windowMode = GetComponentInChildren<Toggle>();
+        this.windowMode.isOn = (PlayerPrefs.GetInt("WindowMode") == 1 ? true : false);
+
+
+        // setting 3 : 볼륨 (0: master, 1: background, 2: effect)
+        this.volumeSliders = GetComponentsInChildren<Slider>();
+        this.volumeSliders[0].value = PlayerPrefs.GetFloat("MasterVolume");
+        this.volumeSliders[1].value = PlayerPrefs.GetFloat("BackgroundVolume");
+        this.volumeSliders[2].value = PlayerPrefs.GetFloat("EffectVolume");
     }
 
-    public void OnClickSave()
+    private void Start()
     {
-        SceneManager.LoadScene("0.Lobby");
+        Init();
     }
 
-    public void OnClickAbort()
+    /* ui event */
+
+    public void OnValueChangedResolution(Dropdown dropdown)
     {
-        // 게임에서 setting 창을 열었을 경우 disable
+        Debug.Log(string.Format("Index: {0} {1}", dropdown.value, dropdown.options[dropdown.value].text));
+    }
 
-        // 로비에서 변경된 값의 유무를 check 하여, 클릭시 메시지 창 띄우기
+    public void OnValueChangedWindowMode(Toggle toggle)
+    {
+        Screen.fullScreenMode = (toggle.isOn == true) ? FullScreenMode.Windowed : FullScreenMode.FullScreenWindow;
+    }
 
-        SceneManager.LoadScene("0.Lobby");
+    public void OnValueChangedMasterVolume(Slider slider)
+    {
+        PlayerPrefs.SetFloat("MasterVolume", slider.value);
+    }
+
+    public void OnValueChangedBackgroundVolume(Slider slider)
+    {
+        PlayerPrefs.SetFloat("BackgroundVolume", slider.value);
+    }
+
+    public void OnValueChangedEffectVolume(Slider slider)
+    {
+        PlayerPrefs.SetFloat("EffectVolume", slider.value);
+    }
+
+    public void OnClickBack()
+    {
+        if (GameManager.instance.isInGame == true)
+        {
+            SceneManager.LoadScene("4.InGame");
+        }
+        else
+        {
+            SceneManager.LoadScene("0.Lobby");
+        }
     }
 }
