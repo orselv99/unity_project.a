@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -100,16 +101,18 @@ public class Settings : MonoBehaviour
         this.resolution.ClearOptions();
         this.resolutions.Clear();
 
-        foreach (var resolution in Screen.resolutions)
+        // TODO:
+        // 주사율 별 해상도 temp[i].refreshRate;
+        // 수직동기화
+        // [Window] 키 잠금
+        var temp = Screen.resolutions.Where(resolution => resolution.refreshRate == 60).ToArray();
+        for (int i = 0; i < temp.Length; i++)
         {
             Resolution item;
-            item.width = resolution.width;
-            item.height = resolution.height;
+            item.width = temp[i].width;
+            item.height = temp[i].height;
             this.resolutions.Add(item);
-
-            var data = new Dropdown.OptionData();
-            data.text = string.Format("{0} x {1}", item.width, item.height);
-            this.resolution.options.Add(data);
+            this.resolution.options.Add(new Dropdown.OptionData(string.Format("{0} x {1}", item.width, item.height)));
         }
 
         this.resolution.value = (GameManager.instance.setting.resolution == int.MaxValue) ? resolutions.Count - 1 : GameManager.instance.setting.resolution;
