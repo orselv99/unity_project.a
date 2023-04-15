@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using static UnityEngine.Rendering.DebugUI;
 
 // 悼利 胶农费官 积己
 // https://www.youtube.com/watch?v=X3LsvOvMpRU
@@ -10,7 +9,7 @@ public class Settings : MonoBehaviour
 {
     public struct Setting
     {
-        public string resolution;
+        public int resolution;
         public bool isWindowed;
         public bool isInvertedAim;
         public float masterVolume;
@@ -24,6 +23,13 @@ public class Settings : MonoBehaviour
     private static string MASTER_VOLUME = "MasterVolume";
     private static string BACKGROUND_VOLUME = "BackgroundVolume";
     private static string EFFECT_VOLUME = "EffectVolume";
+
+    private struct Resolution
+    {
+        public int width;
+        public int height;
+    }
+    private List<Resolution> resolutions = new List<Resolution>();
 
     private readonly Color H0_VALUE = new Color(144f / 255f, 61f / 255f, 98f / 255f);
     private readonly Color H1_VALUE = new Color(189f / 255f, 81f / 255f, 90f / 255f);
@@ -48,10 +54,10 @@ public class Settings : MonoBehaviour
     {
         if (PlayerPrefs.HasKey(RESOLUTION) == false)
         {
-            PlayerPrefs.SetString(RESOLUTION, "1920 x 1080");
-            Debug.Log("No key [Resolution], insert key and default value: 1920 x 1080");
+            PlayerPrefs.SetInt(RESOLUTION, int.MaxValue);
+            Debug.Log(string.Format("No key [Resolution], insert key and default value: ", int.MaxValue));
         }
-        setting.resolution = PlayerPrefs.GetString(RESOLUTION);
+        setting.resolution = PlayerPrefs.GetInt(RESOLUTION);
 
         if (PlayerPrefs.HasKey(WINDOW_MODE) == false)
         {
@@ -91,15 +97,22 @@ public class Settings : MonoBehaviour
 
     private void Start()
     {
-        var resolutions = new List<string>();
-        foreach (var res in Screen.resolutions)
-        {
-            resolutions.Add(string.Format("{0} x {1}", res.width, res.height));
-        }
-        resolutions.Reverse();
-        this.resolution.AddOptions(resolutions);
+        this.resolution.ClearOptions();
+        this.resolutions.Clear();
 
-        /*this.resolution.value = PlayerPrefs.GetString("Resolution");*/
+        foreach (var resolution in Screen.resolutions)
+        {
+            Resolution item;
+            item.width = resolution.width;
+            item.height = resolution.height;
+            this.resolutions.Add(item);
+
+            var data = new Dropdown.OptionData();
+            data.text = string.Format("{0} x {1}", item.width, item.height);
+            this.resolution.options.Add(data);
+        }
+
+        this.resolution.value = (GameManager.instance.setting.resolution == int.MaxValue) ? resolutions.Count - 1 : GameManager.instance.setting.resolution;
         this.windowMode.isOn = GameManager.instance.setting.isWindowed;
         this.invertedAim.isOn = GameManager.instance.setting.isInvertedAim;
         this.volumeSliders[0].value = GameManager.instance.setting.masterVolume;
@@ -134,7 +147,10 @@ public class Settings : MonoBehaviour
     }
     public void OnValueChangedResolution(Dropdown dropdown)
     {
-        Debug.Log(string.Format("Index: {0} {1}", dropdown.value, dropdown.options[dropdown.value].text));
+        var value = dropdown.value;
+        GameManager.instance.setting.resolution = value;
+        PlayerPrefs.SetInt(RESOLUTION, value);
+        Screen.SetResolution(this.resolutions[value].width, this.resolutions[value].height, !GameManager.instance.setting.isWindowed);
     }
     public void OnValueChangedWindowMode(Toggle toggle)
     {

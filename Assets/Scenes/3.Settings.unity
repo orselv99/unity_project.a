@@ -2264,7 +2264,7 @@ MonoBehaviour:
   m_Elasticity: 0.1
   m_Inertia: 1
   m_DecelerationRate: 0.135
-  m_ScrollSensitivity: 1
+  m_ScrollSensitivity: 45
   m_Viewport: {fileID: 1439340885}
   m_HorizontalScrollbar: {fileID: 0}
   m_VerticalScrollbar: {fileID: 514073405}
@@ -3796,7 +3796,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: 3808e4ebc7844f04094da133d3ec13f4, type: 3}
     m_FontSize: 14
     m_FontStyle: 0
     m_BestFit: 0
