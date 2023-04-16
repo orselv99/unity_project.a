@@ -6,6 +6,8 @@ public class Player : MonoBehaviour
 {
     public Transform cameraArmTransform = null;
     private Rigidbody rigidbody = null;
+    [SerializeField]
+    private Canvas canvas = null;
 
     private readonly float SPEED = 5f;
     private readonly float JUMP_POWER = 5f;
@@ -72,6 +74,11 @@ public class Player : MonoBehaviour
         LookAround();
         Move();
         Jump();
+
+        if (Input.GetKeyDown(KeyCode.Escape) == true)
+        {
+            this.canvas.gameObject.SetActive(true);
+        }
     }
 
     private void OnCollisionStay(Collision collision)

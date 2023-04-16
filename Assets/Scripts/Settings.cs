@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -12,6 +14,7 @@ public class Settings : MonoBehaviour
     {
         public int resolution;
         public bool isWindowed;
+        public bool isVerticalSyncs;
         public bool isInvertedAim;
         public float masterVolume;
         public float backgroundVolume;
@@ -20,6 +23,7 @@ public class Settings : MonoBehaviour
 
     private static string RESOLUTION = "Resolution";
     private static string WINDOW_MODE = "WindowMode";
+    private static string VERTICAL_SYNCS = "VerticalSyncs";
     private static string INVERTED_AIM = "InvertedAim";
     private static string MASTER_VOLUME = "MasterVolume";
     private static string BACKGROUND_VOLUME = "BackgroundVolume";
@@ -29,6 +33,7 @@ public class Settings : MonoBehaviour
     {
         public int width;
         public int height;
+        public int refreshRate;
     }
     private List<Resolution> resolutions = new List<Resolution>();
 
@@ -42,6 +47,8 @@ public class Settings : MonoBehaviour
     private Dropdown resolution = null;
     [SerializeField]
     private Toggle windowMode = null;
+    [SerializeField]
+    private Toggle verticalSyncs = null;
     [SerializeField]
     private Toggle invertedAim = null;
     [SerializeField]
@@ -66,6 +73,13 @@ public class Settings : MonoBehaviour
             Debug.Log("No key [WindowMode], insert key and default value: 0");
         }
         setting.isWindowed = (PlayerPrefs.GetInt(WINDOW_MODE) == 1) ? true : false;
+
+        if (PlayerPrefs.HasKey(VERTICAL_SYNCS) == false)
+        {
+            PlayerPrefs.SetInt(VERTICAL_SYNCS, 1);
+            Debug.Log("No key [VerticalSyncs], insert key and default value: 1");
+        }
+        setting.isVerticalSyncs = (PlayerPrefs.GetInt(VERTICAL_SYNCS) == 1) ? true : false;
 
         if (PlayerPrefs.HasKey(INVERTED_AIM) == false)
         {
@@ -105,18 +119,21 @@ public class Settings : MonoBehaviour
         // 주사율 별 해상도 temp[i].refreshRate;
         // 수직동기화
         // [Window] 키 잠금
-        var temp = Screen.resolutions.Where(resolution => resolution.refreshRate == 60).ToArray();
+        // dropdown 현재 아이템으로 이동
+        var temp = Screen.resolutions;
         for (int i = 0; i < temp.Length; i++)
         {
             Resolution item;
             item.width = temp[i].width;
             item.height = temp[i].height;
+            item.refreshRate = temp[i].refreshRate;
             this.resolutions.Add(item);
-            this.resolution.options.Add(new Dropdown.OptionData(string.Format("{0} x {1}", item.width, item.height)));
+            this.resolution.options.Add(new Dropdown.OptionData(string.Format("{0} x {1} ({2}Hz)", item.width, item.height, item.refreshRate)));
         }
 
         this.resolution.value = (GameManager.instance.setting.resolution == int.MaxValue) ? resolutions.Count - 1 : GameManager.instance.setting.resolution;
         this.windowMode.isOn = GameManager.instance.setting.isWindowed;
+        this.verticalSyncs.isOn = GameManager.instance.setting.isVerticalSyncs;
         this.invertedAim.isOn = GameManager.instance.setting.isInvertedAim;
         this.volumeSliders[0].value = GameManager.instance.setting.masterVolume;
         this.volumeSliders[1].value = GameManager.instance.setting.backgroundVolume;
@@ -153,7 +170,14 @@ public class Settings : MonoBehaviour
         var value = dropdown.value;
         GameManager.instance.setting.resolution = value;
         PlayerPrefs.SetInt(RESOLUTION, value);
-        Screen.SetResolution(this.resolutions[value].width, this.resolutions[value].height, !GameManager.instance.setting.isWindowed);
+
+        // TODO:
+        // 주사율 적용확인할 것
+        Screen.SetResolution(
+            this.resolutions[value].width, 
+            this.resolutions[value].height, 
+            !GameManager.instance.setting.isWindowed, 
+            this.resolutions[value].refreshRate);
     }
     public void OnValueChangedWindowMode(Toggle toggle)
     {
@@ -161,6 +185,17 @@ public class Settings : MonoBehaviour
         GameManager.instance.setting.isWindowed = isChecked;
         PlayerPrefs.SetInt(WINDOW_MODE, (isChecked == true) ? 1 : 0);
         Screen.fullScreenMode = (isChecked == true) ? FullScreenMode.Windowed : FullScreenMode.FullScreenWindow;
+    }
+    public void OnValueChangedVerticalSyncs(Toggle toggle)
+    {
+        var isChecked = toggle.isOn;
+        GameManager.instance.setting.isVerticalSyncs = isChecked;
+        PlayerPrefs.SetInt(VERTICAL_SYNCS, (isChecked == true) ? 1 : 0);
+
+        // Project Settings > Quality > VSync Count
+        // 0: Don't Sync
+        // 1: Every V Blank
+        QualitySettings.vSyncCount = isChecked ? 1 : 0;
     }
     public void OnValueChangedInvertedAim(Toggle toggle)
     {

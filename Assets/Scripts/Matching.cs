@@ -8,6 +8,7 @@ public class Matching : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        GameManager.instance.isPlayingGame = true;
         StartCoroutine(WaitForInGame());
     }
 
